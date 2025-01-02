@@ -1,0 +1,18 @@
+public class ProductsController {
+
+    @RemoteAction
+    public static Map<String, Object> getRecords(String searchText, Integer page, Integer pageSize) {
+        Map<String, Object> result = new Map<String, Object>();
+        List<Product2> products;
+
+        if (String.isBlank(searchText)) {
+            products = [select Id,Name,IsActive, Apttus_Config2__ConfigurationType__c from Product2  ORDER BY Name LIMIT :pageSize OFFSET :((page - 1) * pageSize)];
+        } else {
+            products = [select Id,Name,IsActive, Apttus_Config2__ConfigurationType__c from Product2  WHERE Name LIKE :('%' + searchText + '%') ORDER BY Name LIMIT :pageSize OFFSET :((page - 1) * pageSize)];
+        }
+
+        result.put('records', products);
+        result.put('hasMore', products.size() == pageSize);
+        return result;
+    }
+}
