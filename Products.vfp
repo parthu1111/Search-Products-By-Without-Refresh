@@ -1,0 +1,80 @@
+<apex:page controller="ProductsController" docType="html-5.0" showHeader="false" standardStylesheets="false" sidebar="false" lightningStylesheets="true">
+    <apex:includeScript value="/soap/ajax/49.0/connection.js"/>
+    <apex:includeScript value="/soap/ajax/49.0/apex.js"/>
+     <div class="slds-scope">
+        <div class="slds-card">
+            <div class="slds-card__header">
+                <div class="slds-grid slds-grid_align-spread">
+                    <h1 class="slds-text-heading_medium">Data Viewer</h1>
+                    <div class="slds-form-element">
+                        <div class="slds-form-element__control">
+                            <input type="text" id="searchText" class="slds-input" placeholder="Search..."/>
+                        </div>
+                    </div>
+                    <button class="slds-button slds-button_brand" onclick="performSearch()">Search</button>
+                </div>
+            </div>
+
+            <div class="slds-card__body">
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="slds-text-title_caps">Name</th>
+                            <th scope="col" class="slds-text-title_caps">isActive</th>
+                            <th scope="col" class="slds-text-title_caps">ConfigurationType</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTable"></tbody>
+                </table>
+            </div>
+
+            <div class="slds-card__footer">
+                <button class="slds-button slds-button_neutral" id="prevButton" onclick="changePage(-1)" disabled="true">Previous</button>
+                <button class="slds-button slds-button_neutral" id="nextButton" onclick="changePage(1)" disabled="false">Next</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+    function fetchData(searchText, page) {
+            ProductsController.getRecords(searchText, page, pageSize, function(result, event) {
+                if (event.status) {
+                    const table = document.getElementById('dataTable');
+                    table.innerHTML = '';
+
+                    if (result.records.length > 0) {
+                        result.records.forEach(record => {
+                            const row = `<tr>
+                                <td class="slds-cell-wrap">${record.Name}</td>
+                                <td class="slds-cell-wrap">${record.IsActive || ''}</td>
+                                <td class="slds-cell-wrap">${record.Apttus_Config2__ConfigurationType__c || ''}</td>
+                            </tr>`;
+                            table.innerHTML += row;
+                        });
+
+                        document.getElementById('prevButton').disabled = page === 1;
+                        document.getElementById('nextButton').disabled = !result.hasMore;
+                    } else {
+                        table.innerHTML = '<tr><td colspan="3">No records found</td></tr>';
+                        document.getElementById('prevButton').disabled = true;
+                        document.getElementById('nextButton').disabled = true;
+                    }
+                } else {
+                    alert('Error fetching data');
+                }
+            }, {escape: true});
+        }
+    function performSearch() {
+            currentPage = 1;
+            const searchText = document.getElementById('searchText').value;
+            fetchData(searchText, currentPage);
+        }
+     function changePage(direction) {
+            currentPage += direction;
+            const searchText = document.getElementById('searchText').value;
+            fetchData(searchText, currentPage);
+        }
+    fetchData('', currentPage);
+    </script>
+</apex:page>
